@@ -1,0 +1,42 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+.eggs/
+dist/
+build/
+sdist/
+*.egg-info/
+*.deb
+*.rpm
+*.manifest
+*.spec
+*.wheel
+# PyInstaller builds
+**/__pyinstaller_cache__
+**/_MEI*
+# Environments
+.env
+venv/
+ENV/
+env/
+# Unit test / coverage reports
+htmlcov/
+.pytest_cache/
+.coverage
+# Translations
+*.mo
+*.pot
+# Flask Specific
+instance/
+flaskr.db
+# Editor-related files
+.vscode/
+*.swp
+*.swo
+# OS-generated files
+.DS_Store
+# Session data
+flask_session/

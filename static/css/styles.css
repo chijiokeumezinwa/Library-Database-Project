@@ -1,0 +1,22 @@
+body {
+    background-color: red;
+    text-align: center; /* Centers text-based elements */
+}
+
+h1 {
+    color: blue;
+    font-size: 72px;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
+.logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px; /* Adjust height as needed */
+}
+
+.logo {
+    max-width: 200px; /* Adjust size as needed */
+    height: auto;
+}

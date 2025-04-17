@@ -1,9 +1,5 @@
-<!DOCTYPE html>
-<html lang = "en">
-    <head>
-    <title>Flask Application</title>
-    </head>
-    <body>
-        <header1>Welcome to my Database application!</header1>
-    </body>
-</html>
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>{% block title %} Welcome to my Database Application{% endblock %}</h1>
+{% endblock %}
