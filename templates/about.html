@@ -1,69 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <title>AAPOWERCLEAN.COM</title>
-        <style>
-            div {
-                text-align:left;
-                padding-inline: 200px;
-                font-size: 35px ;
-                font-style: italic;
-                font-weight: bolder;
-                color: lightcyan;
-            }
-            h1,p  {
-                text-align: center;
-                color: lightcyan;
-                font-size: 50px;
-                font-style: italic;
-                font-weight: bold;
-            }
-            body {
-                background-color:red;
-                color-scheme: black;
-                text-align: center;
-            }
-            img {
-                text-align: center;
-                max-height: 2000px;
-                max-width: 2000px; /* Adjust as needed */
-                height: 400px;
-                width: 300px;
-                display: flexbox ;
-                margin:none;
-                animation: hoverAnimation 30s infinite alternate ease-in-out;
-                position: relative;
-            } /* Closing brace added here */
-
-            @keyframes hoverAnimation {
-                0% {
-                    transform: translateX(0); /* Center */
-                }
-                25% {
-                    transform: translateX(400px); /* Move right */
-                }
-                50% {
-                    transform: translateX(-400px); /* Move left */
-                }
-                75% {
-                    transform: translateX(-400px); /* Move right */
-                }
-                100% {
-                    transform: translateX(0); /* Back to center */
-                }
-            }
-        </style>
-    </head>
-    <body>
-        <h1> ~ Welcome to All American Window Cleaning ~</h1>
-        <img src="All American Window Cleaning.jpeg" alt="NJ's Window Cleaners">
-        <p> ~ New Jersey's Affordable Luxury Window Cleaning ~</p>
-        <p>  ~ Commercial and Residential Cleaning Services ~ </p>
-        <div>~ Residential ~ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp
-            &nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;
-            &nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;
-            &nbsp;&nbsp;~ Commercial ~</div>  
-        
-    </body>
-</html> 
+{% extends 'base.html' %}
+{% block page_title %}Welcome!{% endblock %}
+{% block body %}
+    {{ super() }}
+    <p>Our Library Database application is meant to serve as an interface for users of the library to:</p>
+    <li>Show all available books </li>
+    <li>Show checked out books</li>
+    <li>Overdue books</li>
+    <li>Filters (Title, author, ISBN, categories, years, available (i.e. there’s still a copy left for them to take))</li>
+    <li>Search books by the title, author, isbn, or category</li>
+    <br>
+    <p>It is also meant to serve as a portal for admin users</p>
+    <li>Admins should also be able to see a list of Library Members (by name and ID)</li>
+    <li>Admins should also be able to see a list of transactions (by member/book)</li>
+{% endblock %}
 
