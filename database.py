@@ -7,8 +7,8 @@ app = create_app()
 def list_users():
     # Query to get all user IDs
     with app.app_context():
-        users = user.query.with_entities(user.id).all()
-        return [u.id for u in users]
+        users = user.query.with_entities(user.user_id).all()
+        return [u.user_id for u in users]
    
 def verify(id, pw):
     with app.app_context():

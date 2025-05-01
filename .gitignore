@@ -1,2 +1,8 @@
 #untracked files
 .env
+
+## No virtual environment shared
+MyVenv/
+
+## No sharing of cache
+__pycache__

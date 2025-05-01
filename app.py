@@ -15,10 +15,13 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object('config')
 
-    app.config["SQLALCHEMY_DATABASE_URI"] = "mysql://{db_user}:{db_password}@localhost/{db_name}".format(
+    app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://{db_user}:{db_password}@localhost/{db_name}".format(
         db_user=db_user, db_password=db_password, db_name=db_name)
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
+
+    with app.app_context():
+        db.create_all()
 
     @app.route('/users')
     def users():
@@ -50,7 +53,7 @@ def create_app():
     @app.route("/logout/")
     def logout():
         session.pop("current_user", None)
-        return(redirect(url_for("FUN_root")))
+        return(redirect(url_for("home")))
 
     return app
 

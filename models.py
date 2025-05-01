@@ -18,19 +18,22 @@ class user(db.Model):
     def __repr__(self):
         return f'<User {self.user_id}, {self.username}>'
 
-class admin_request(db.model):
+class admin_request(db.Model):
     __tablename__ ='admin_requests'
 
     # Define your columns here
     request_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     request_date = db.Column(db.Date, default=datetime.date.today)  # Default to today if not provided
     status = db.Column(Enum('Pending', 'Approved', 'Denied', name='status_enum'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)  # Foreign key referencing User model
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)  # Foreign key referencing User model
 
     def __init__(self, request_date=None, status=None, user_id=None):
         if request_date is not None:
             self.request_date = request_date
+        if status is not None:
+            self.status = status
+        if user_id is not None:
+            self.user_id = user_id
 
 class Category(db.Model):
     __tablename__ = 'categories'
@@ -62,8 +65,8 @@ class Book(db.Model):
     title = db.Column(db.String(200), nullable=False)
     author = db.Column(db.String(150), nullable=False)
     isbn = db.Column(db.String(20), unique=True, nullable=False)
-    category_id = db.Column(db.Integer, db.ForeignKey('category.category_id'))
-    publisher_id = db.Column(db.Integer, db.ForeignKey('publisher.publisher_id'))
+    category_id = db.Column(db.Integer, db.ForeignKey('categories.category_id'))
+    publisher_id = db.Column(db.Integer, db.ForeignKey('publishers.publisher_id'))
     year_published = db.Column(db.Integer)  # Store year as integer
     copies_available = db.Column(db.Integer, default=0)
 
@@ -81,8 +84,8 @@ class Loan(db.Model):
 
     # Define your columns here
     loan_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)
-    book_id = db.Column(db.Integer, db.ForeignKey('book.book_id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    book_id = db.Column(db.Integer, db.ForeignKey('books.book_id'), nullable=False)
     loan_date = db.Column(db.Date, nullable=False)
     due_date = db.Column(db.Date, nullable=False)
     return_date = db.Column(db.Date)
@@ -99,12 +102,12 @@ class Loan(db.Model):
         self.fine_amount = fine_amount
 
 class Reservation(db.Model):
-    __tablename__ = 'reservation'
+    __tablename__ = 'reservations'
 
     # Define your columns here
     reservation_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)
-    book_id = db.Column(db.Integer, db.ForeignKey('book.book_id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    book_id = db.Column(db.Integer, db.ForeignKey('books.book_id'), nullable=False)
     reservation_date = db.Column(db.Date, nullable=False)
     status = db.Column(db.Enum('Pending', 'Completed', name='reservation_status_enum'), default='Pending', nullable=False)
 
