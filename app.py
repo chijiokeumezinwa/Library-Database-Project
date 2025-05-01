@@ -1,10 +1,7 @@
 import os
-from flask import Flask, render_template
+from flask import Flask, render_template, session, url_for, redirect, request, abort, flash
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
-
-app = Flask(__name__)
-
 
 load_dotenv()
 
@@ -13,43 +10,50 @@ db_user = os.environ['DB_USER']
 db_password = os.environ['DB_PASSWORD']
 db_name = os.environ['DB_NAME']
 
-app.config.from_object('config')
+db = SQLAlchemy()
+def create_app():
+    app = Flask(__name__)
+    app.config.from_object('config')
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql://{db_user}:{db_password}@localhost/{db_name}".format(
-    db_user=db_user, db_password=db_password, db_name=db_name)
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
+    app.config["SQLALCHEMY_DATABASE_URI"] = "mysql://{db_user}:{db_password}@localhost/{db_name}".format(
+        db_user=db_user, db_password=db_password, db_name=db_name)
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    db.init_app(app)
 
-# Define a Model for your table
-class user(db.Model):
-    __tablename__ = 'users'  # Specify your actual table name
+    @app.route('/users')
+    def users():
+        from database import list_users
+        return {'users': list_users()}
 
-    # Define your columns here
-    user_id  = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), nullable=False)
-    password = db.Column(db.String(255), nullable=False)
-    email = db.Column(db.String(255), nullable=False)
-    is_verified = db.Column(db.Boolean, default=False)
-    is_admin = db.Column(db.Boolean, default=False)
-    
-                 
-    def __repr__(self):
-        return f'<User {self.user_id}, {self.username}>'
-
-@app.errorhandler(401)
-def FUN_401(error):
-    return render_template("page_401.html"), 401
+    @app.errorhandler(401)
+    def FUN_401(error):
+        return render_template("page_401.html"), 401
 
 
-@app.route('/')
-def home():
-    return render_template('index.html')
+    @app.route('/')
+    def home():
+        return render_template('index.html')
 
-@app.route('/about')
-def about():
-    return render_template('about.html')
+    @app.route('/about')
+    def about():
+        return render_template('about.html')
 
+    @app.route("/login", methods = ["POST"])
+    def login():
+        from database import list_users, verify
+        id_submitted = request.form.get("id")
+        if (id_submitted in list_users()) and verify(id_submitted, request.form.get("pw")):
+            session['current_user'] = id_submitted
+        
+        return(redirect(url_for("home")))
 
+    @app.route("/logout/")
+    def logout():
+        session.pop("current_user", None)
+        return(redirect(url_for("FUN_root")))
+
+    return app
 
 if __name__ == '__main__':
+    app = create_app()
     app.run(debug=True)
