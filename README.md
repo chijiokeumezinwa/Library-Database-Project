@@ -12,9 +12,9 @@ You will need:
 * make sure that dotenv module is installed using command pip install python-dotenv
 
 * Please write .env file with following credentials:
-DB_USER=<DB Username>
-DB_PASSWORD=<DB Password>
-DB_NAME=<DB NAME>
+DB_USER=DB Username
+DB_PASSWORD=DB Password
+DB_NAME=DB NAME
 
 
 ## install flask
