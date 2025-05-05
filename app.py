@@ -3,6 +3,7 @@ from flask import Flask, render_template, session, url_for, redirect, request, a
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 
+
 load_dotenv()
 
 #credentials
@@ -57,6 +58,38 @@ def create_app():
     def logout():
         session.pop("current_user", None)
         return(redirect(url_for("home")))
+
+    @app.route("/register", methods=["GET", "POST"])
+    def register():
+        from werkzeug.security import generate_password_hash
+        from models import user
+        from sqlalchemy.exc import IntegrityError
+
+        if request.method == "POST":
+            username = request.form.get("username")
+            password = request.form.get("password")
+            email = request.form.get("email")
+
+            # existing_user = user.query.filter_by(username=username).first()
+            # if existing_user:
+            #     flash("Username already exists. Please choose different username")
+            #     return redirect(url_for("register"))
+            
+            hashed_password = generate_password_hash(password)
+            new_user = user(username=username, password=hashed_password, email=email)
+            
+            try:
+                db.session.add(new_user)
+                db.session.commit()
+                flash("User registered successfully!")
+                return redirect(url_for("login"))
+            except IntegrityError:
+                db.session.rollback()
+                flash('Username or Email already exists please choose another.', 'danger')
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error: {str(e)}', 'danger')
+        return render_template("register.html")
 
     return app
 
