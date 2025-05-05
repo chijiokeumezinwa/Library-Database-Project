@@ -1,6 +1,8 @@
 from app import db
 from sqlalchemy import Enum
 import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
+
 
 # Define Models for your tables
 class user(db.Model):
@@ -14,9 +16,19 @@ class user(db.Model):
     is_verified = db.Column(db.Boolean, default=False)
     is_admin = db.Column(db.Boolean, default=False)
     
-                 
+    def __init__(self, username, password, email, is_verified=False, is_admin=False):
+        self.username = username
+        self.password = generate_password_hash(password)
+        self.email = email
+        self.is_verified = is_verified
+        self.is_admin = is_admin
+
+             
     def __repr__(self):
         return f'<User {self.user_id}, {self.username}>'
+    
+    def verify_password(self, password):
+        return check_password_hash(self.password, password)
 
 class admin_request(db.Model):
     __tablename__ ='admin_requests'

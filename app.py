@@ -15,6 +15,7 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object('config')
 
+
     app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://{db_user}:{db_password}@localhost/{db_name}".format(
         db_user=db_user, db_password=db_password, db_name=db_name)
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -47,9 +48,11 @@ def create_app():
         id_submitted = request.form.get("id")
         if (id_submitted in list_users()) and verify(id_submitted, request.form.get("pw")):
             session['current_user'] = id_submitted
+            return(redirect(url_for("home")))
+        else:
+            flash("Invalid Credentials")
+            return redirect(url_for("home"))
         
-        return(redirect(url_for("home")))
-
     @app.route("/logout/")
     def logout():
         session.pop("current_user", None)
