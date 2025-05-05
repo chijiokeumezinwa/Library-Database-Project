@@ -31,6 +31,18 @@ def create_app():
 
     @app.route('/users')
     def users():
+        from models import user
+        print(f"Current session user: {session.get('current_user')}")  # Debugging
+        current_user = user.query.filter_by(username=session.get("current_user")).first()
+        
+        if current_user is None:
+            flash("You need to be logged in to view this page. ")
+            return redirect(url_for('login'))
+        
+        if not current_user.is_admin:
+            flash("You do not have permission to view this page.")
+            return redirect(url_for('home'))            
+                    
         from database import list_users
         return {'users': list_users()}
 
@@ -53,20 +65,24 @@ def create_app():
 
         #handle post request
         if request.method == "POST":
-            id_submitted = request.form.get("id")
-            if (id_submitted in list_users()) and verify(id_submitted, request.form.get("pw")):
-                session['current_user'] = id_submitted
+            username_submitted = request.form.get("id").strip()
+            password_submitted = request.form.get("pw").strip()
+
+            # Debugging: Print username and password submitted
+            print(f"Username Submitted: {username_submitted}")
+            print(f"Password Submitted: {password_submitted}")
+            if (username_submitted in list_users()) and verify(username_submitted, password_submitted):
+                session['current_user'] = username_submitted
+                print(f"Current session user: {session['current_user']}")  # Debugging
+                flash("Login successful!") 
                 return(redirect(url_for("home")))
             else:
                 flash("Invalid Credentials")
-                return redirect(url_for("home"))
+                return redirect(url_for("login"))
         #handle get request
         return render_template("login.html")
 
-    # @app.route("/profile/")
-    # def profile():
-    #     if "current_user" in session.keys():
-
+            
     @app.route("/logout/")
     def logout():
         session.pop("current_user", None)
@@ -82,7 +98,9 @@ def create_app():
             username = request.form.get("username")
             password = request.form.get("password")
             email = request.form.get("email")
-
+            # Debugging: Print username and password submitted
+            print(f"Username Submitted: {username}")
+            print(f"Password Submitted: {password}")
             existing_user = user.query.filter_by(username=username).first()
             existing_email = user.query.filter_by(email=email).first()
             if existing_user:
@@ -92,7 +110,7 @@ def create_app():
                 flash("Email already exists. Please choose different email address")
                 return redirect(url_for("register"))
 
-            hashed_password = generate_password_hash(password)
+            hashed_password = generate_password_hash(password, method='scrypt')
             new_user = user(username=username, password=hashed_password, email=email)
             
             try:
@@ -107,6 +125,27 @@ def create_app():
                 db.session.rollback()
                 flash(f'Error: {str(e)}', 'danger')
         return render_template("register.html")
+
+    @app.route("/admin/")
+    def admin():
+        from database import list_users
+        if session.get("current_user", None) == "ADMIN":
+            user_list = list_users()
+            user_table = zip(range(1, len(user_list)+1),\
+                            user_list,\
+                            [x + y for x,y in zip(["/delete_user/"] * len(user_list), user_list)])
+            return render_template("admin.html", users = user_table)
+        else:
+            return abort(401)
+    
+    @app.route('/profile')
+    def profile():
+        if 'current_user' not in session:
+            flash("You need to be logged in to view your profile.")
+            return redirect(url_for('login'))
+
+        # Continue with logic for displaying user profile
+        return render_template('profile.html')
 
     return app
 

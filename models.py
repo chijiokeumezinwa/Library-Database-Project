@@ -18,7 +18,7 @@ class user(db.Model):
     
     def __init__(self, username, password, email, is_verified=False, is_admin=False):
         self.username = username
-        self.password = generate_password_hash(password)
+        self.password = generate_password_hash(password, method='scrypt')
         self.email = email
         self.is_verified = is_verified
         self.is_admin = is_admin
