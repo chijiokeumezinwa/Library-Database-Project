@@ -8,7 +8,16 @@
     {{ super() }}
     <div class="container mt-5">
         <h2 class="text-center">Create an Account</h2>
-
+        <!-- display flash messages for notifications -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="alert alert-warning">
+                    {% for message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
         <!-- Registration Form -->
         <form method="POST" action="{{ url_for('register') }}">
             <div class="form-group">

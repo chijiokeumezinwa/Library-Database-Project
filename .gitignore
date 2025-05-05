@@ -6,3 +6,6 @@ MyVenv/
 
 ## No sharing of cache
 __pycache__
+
+#dont share migration
+migrations/

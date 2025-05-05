@@ -1,6 +1,7 @@
 import os
 from flask import Flask, render_template, session, url_for, redirect, request, abort, flash
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from dotenv import load_dotenv
 
 
@@ -12,6 +13,8 @@ db_password = os.environ['DB_PASSWORD']
 db_name = os.environ['DB_NAME']
 
 db = SQLAlchemy()
+migrate = Migrate()
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object('config')
@@ -21,6 +24,7 @@ def create_app():
         db_user=db_user, db_password=db_password, db_name=db_name)
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
+    migrate.init_app(app,db)
 
     with app.app_context():
         db.create_all()
@@ -43,17 +47,26 @@ def create_app():
     def about():
         return render_template('about.html')
 
-    @app.route("/login", methods = ["POST"])
+    @app.route("/login", methods = ["GET","POST"])
     def login():
         from database import list_users, verify
-        id_submitted = request.form.get("id")
-        if (id_submitted in list_users()) and verify(id_submitted, request.form.get("pw")):
-            session['current_user'] = id_submitted
-            return(redirect(url_for("home")))
-        else:
-            flash("Invalid Credentials")
-            return redirect(url_for("home"))
-        
+
+        #handle post request
+        if request.method == "POST":
+            id_submitted = request.form.get("id")
+            if (id_submitted in list_users()) and verify(id_submitted, request.form.get("pw")):
+                session['current_user'] = id_submitted
+                return(redirect(url_for("home")))
+            else:
+                flash("Invalid Credentials")
+                return redirect(url_for("home"))
+        #handle get request
+        return render_template("login.html")
+
+    # @app.route("/profile/")
+    # def profile():
+    #     if "current_user" in session.keys():
+
     @app.route("/logout/")
     def logout():
         session.pop("current_user", None)
@@ -70,11 +83,15 @@ def create_app():
             password = request.form.get("password")
             email = request.form.get("email")
 
-            # existing_user = user.query.filter_by(username=username).first()
-            # if existing_user:
-            #     flash("Username already exists. Please choose different username")
-            #     return redirect(url_for("register"))
-            
+            existing_user = user.query.filter_by(username=username).first()
+            existing_email = user.query.filter_by(email=email).first()
+            if existing_user:
+                flash("Username already exists. Please choose different username")
+                return redirect(url_for("register"))
+            if existing_email:
+                flash("Email already exists. Please choose different email address")
+                return redirect(url_for("register"))
+
             hashed_password = generate_password_hash(password)
             new_user = user(username=username, password=hashed_password, email=email)
             
