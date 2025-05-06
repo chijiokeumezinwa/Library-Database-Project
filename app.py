@@ -134,16 +134,95 @@ def create_app():
 
     @app.route("/admin/")
     def admin():
-        from database import list_users
-        if session.get("current_user", None) == "ADMIN":
-            user_list = list_users()
-            user_table = zip(range(1, len(user_list)+1),\
-                            user_list,\
-                            [x + y for x,y in zip(["/delete_user/"] * len(user_list), user_list)])
-            return render_template("admin.html", users = user_table)
-        else:
+        from models import user, admin_request
+
+        current_user = user.query.filter_by(username=session.get("current_user")).first()
+        
+        if not current_user or not current_user.is_admin:
+            flash("You are not authorized to view this page.")
             return abort(401)
+        
+        # Retrieve pending admin requests, and eagerly load the associated user
+        requests = admin_request.query.filter_by(status='Pending').all()
+
+        for request in requests:
+            request.user = user.query.get(request.user_id)
+
+        return render_template("admin.html", requests=requests)
     
+    @app.route('/admin_request', methods=['GET', 'POST'])
+    def request_admin_request():
+        from models import user, admin_request
+        if 'current_user' not in session:
+            flash("You need to be logged in to request admin status.")
+            return redirect(url_for('login'))
+        
+        current_user = user.query.filter_by(username=session['current_user']).first()
+        if not current_user:
+            flash("User not found.")
+            return redirect(url_for('login'))
+        existing_request = admin_request.query.filter_by(user_id=current_user.user_id).first()
+        # If the request exists, get its status
+        if existing_request:
+            request_status = existing_request.status
+        else:
+            request_status = None
+
+        if request.method == 'POST':
+            
+            if existing_request:
+                flash("You already submitted an admin request.")
+                return redirect(url_for('profile'))
+            #create and save new admin request
+            new_request = admin_request(user_id=current_user.user_id, status='Pending')
+            db.session.add(new_request)
+            db.session.commit()
+
+            flash("Your admin request has been submitted. You will be notified once it is reviewed.")
+            return redirect(url_for('profile'))
+        return render_template('admin_request.html', username=current_user.username, request_status=request_status)
+    
+    @app.route('/approve_admin_request/<int:request_id>')
+    def approve_admin_request(request_id):
+        from models import admin_request, user
+
+        # Ensure the current user is an admin
+        current_user = user.query.filter_by(username=session.get("current_user")).first()
+        if not current_user or not current_user.is_admin:
+            flash("You are not authorized to perform this action.")
+            return abort(401)
+
+        # Find the admin request and approve it
+        request = admin_request.query.get(request_id)
+        if request:
+            user_to_approve = user.query.get(request.user_id)
+            if user_to_approve:
+                user_to_approve.is_admin = True  # Grant admin status
+                request.status = 'Approved'  # Update the request status to Approved
+                db.session.commit()
+                flash(f"Admin request for {user_to_approve.username} has been approved.")
+            else:
+                flash("User associated with this request not found.")
+        return redirect(url_for('admin'))
+
+    @app.route('/deny_admin_request/<int:request_id>')
+    def deny_admin_request(request_id):
+        from models import admin_request, user
+
+        # Ensure the current user is an admin
+        current_user = user.query.filter_by(username=session.get("current_user")).first()
+        if not current_user or not current_user.is_admin:
+            flash("You are not authorized to perform this action.")
+            return abort(401)
+
+        # Find the admin request and deny it
+        request = admin_request.query.get(request_id)
+        if request:
+            request.status = 'Denied'  # Mark the request as Denied
+            db.session.commit()
+            flash("Admin request has been denied.")
+        return redirect(url_for('admin'))
+
     @app.route('/profile')
     def profile():
         from models import user

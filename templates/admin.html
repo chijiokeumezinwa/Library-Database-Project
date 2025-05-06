@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 
 {% block title %}
-    Login
+    Admin Dashboard
 {% endblock %}
 
 {% block body %}
     {{ super() }}
     <div class="container mt-5">
-        <h2 class="text-center">Login to Your Account</h2>
+        <h2 class="text-center">Admin Dashboard</h2>
 
         <!-- Display Flash Messages -->
         {% with messages = get_flashed_messages() %}
@@ -20,23 +20,38 @@
             {% endif %}
         {% endwith %}
 
-        <!-- Login Form -->
-        <form method="POST" action="{{ url_for('login') }}">
-            <div class="form-group">
-                <label for="id">Username:</label>
-                <input type="text" id="id" name="id" class="form-control" placeholder="Enter Username" required>
-            </div>
+        <!-- Display Pending Admin Requests -->
+        <div class="pending-requests mt-4">
+            <h3>Pending Admin Requests</h3>
 
-            <div class="form-group">
-                <label for="password">Password:</label>
-                <input type="password" id="password" name="pw" class="form-control" placeholder="Enter Password" required>
-            </div>
+            {% if requests %}
+                <div class="list-group">
+                    {% for request in requests %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <p><strong>User:</strong> {{ request.user.username }}</p>
+                                <p><strong>Request Date:</strong> {{ request.request_date }}</p>
+                                <p><strong>Status:</strong> {{ request.status }}</p>
+                            </div>
+                            <div>
+                                <!-- Approve Button -->
+                                <a href="{{ url_for('approve_admin_request', request_id=request.request_id) }}" class="btn btn-success btn-sm">Approve</a>
+                                
+                                <!-- Deny Button -->
+                                <a href="{{ url_for('deny_admin_request', request_id=request.request_id) }}" class="btn btn-danger btn-sm">Deny</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p>No pending requests at the moment.</p>
+            {% endif %}
+        </div>
 
-            <button type="submit" class="btn btn-primary btn-block">Login</button>
-        </form>
-
-        <p class="text-center mt-3">
-            Don't have an account? <a href="{{ url_for('register') }}">Register here</a>
-        </p>
+        <!-- Link to View All Users -->
+        <div class="mt-4">
+            <h4>Other Admin Actions</h4>
+            <a href="{{ url_for('users') }}" class="btn btn-primary">View All Users</a>
+        </div>
     </div>
 {% endblock %}
