@@ -20,7 +20,7 @@ def create_app():
     app.config.from_object('config')
 
 
-    app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://{db_user}:{db_password}@localhost/{db_name}".format(
+    app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqldb://{db_user}:{db_password}@localhost/{db_name}".format(
         db_user=db_user, db_password=db_password, db_name=db_name)
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
@@ -53,7 +53,13 @@ def create_app():
 
     @app.route('/')
     def home():
-        return render_template('index.html')
+        from models import user
+        current_user = None
+
+        if 'current_user' in session:
+            current_user = user.query.filter_by(username=session['current_user']).first()
+
+        return render_template('index.html', current_user=current_user)
 
     @app.route('/about')
     def about():
@@ -95,9 +101,9 @@ def create_app():
         from sqlalchemy.exc import IntegrityError
 
         if request.method == "POST":
-            username = request.form.get("username")
-            password = request.form.get("password")
-            email = request.form.get("email")
+            username = request.form.get("username", "").strip()
+            password = request.form.get("password", "").strip()
+            email = request.form.get("email", "").strip()
             # Debugging: Print username and password submitted
             print(f"Username Submitted: {username}")
             print(f"Password Submitted: {password}")

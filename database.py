@@ -7,12 +7,12 @@ app = create_app()
 
 def list_users():
     # Query to get all user IDs
-    with create_app().app_context():
+    with app.app_context():
         users = user.query.with_entities(user.username).all()
         return [u.username for u in users]
    
 def verify(username, password):
-    with create_app().app_context():
+    with app.app_context():
         user_instance = user.query.filter_by(username=username).first()  # Retrieve the user by ID
 
         if user_instance:
