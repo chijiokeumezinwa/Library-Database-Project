@@ -32,7 +32,7 @@
                     <li><a href="{{ url_for('home') }}">Home</a></li>
                     <li><a href="{{ url_for('about') }}">About</a></li>
                     {% if session.get("current_user", None) != None %}
-                    <li><a href="{{ url_for('profile') }}">Private</a></li>
+                    <li><a href="{{ url_for('profile') }}">Profile</a></li>
                     {% endif%}
                     {% if current_user and current_user.is_admin %}
                         <li><a href="{{ url_for('admin') }}">Admin Dashboard</a></li>

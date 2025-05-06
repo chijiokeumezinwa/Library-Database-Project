@@ -116,7 +116,7 @@ def create_app():
                 flash("Email already exists. Please choose different email address")
                 return redirect(url_for("register"))
 
-            hashed_password = generate_password_hash(password, method='scrypt')
+            hashed_password = generate_password_hash(password)
             new_user = user(username=username, password=hashed_password, email=email)
             
             try:
@@ -146,12 +146,57 @@ def create_app():
     
     @app.route('/profile')
     def profile():
+        from models import user
         if 'current_user' not in session:
             flash("You need to be logged in to view your profile.")
             return redirect(url_for('login'))
 
         # Continue with logic for displaying user profile
-        return render_template('profile.html')
+        current_user=user.query.filter_by(username=session['current_user']).first()
+        
+        if not current_user:
+            flash("User not found.")
+            return redirect(url_for('login'))
+        
+        return render_template('profile.html', username=current_user.username)
+
+    @app.route('/edit_profile', methods=['GET', 'POST'])
+    def edit_profile():
+        from models import user
+        from werkzeug.security import generate_password_hash
+        from sqlalchemy import and_
+
+        if 'current_user' not in session:
+            flash("You need to be logged in.")
+            return redirect(url_for('login'))
+
+        current_user = user.query.filter_by(username=session['current_user']).first()
+        if not current_user:
+            flash("User not found.")
+            return redirect(url_for('login'))
+
+        if request.method == "POST":
+            new_username = request.form.get("new_username", "").strip()
+            new_password = request.form.get("new_password", "").strip()
+
+            # Check if new username is taken by someone else
+            if new_username and new_username != current_user.username:
+                existing_user = user.query.filter(and_(user.username == new_username, user.user_id != current_user.user_id)).first()
+                if existing_user:
+                    flash("Username already taken. Please choose a different one.", "danger")
+                    return redirect(url_for('edit_profile'))
+
+                current_user.username = new_username
+                session["current_user"] = new_username  # update session
+
+            if new_password:
+                current_user.password = generate_password_hash(new_password)
+
+            db.session.commit()
+            flash("Profile updated successfully.")
+            return redirect(url_for('profile'))
+
+        return render_template("edit_profile.html", username=current_user.username)
 
     return app
 
