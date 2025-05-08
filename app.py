@@ -28,13 +28,13 @@ def create_app():
     db_host = os.getenv('DB_HOST')
     db_name = os.getenv('DB_NAME')
 
-    app.config['SECRET_KEY'] = os.urandom(24)
 
     app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{db_user}:{db_password}@{db_host}/{db_name}"
     # app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqldb://{db_user}:{db_password}@localhost/{db_name}".format(
     #     db_user=db_user, db_password=db_password, db_name=db_name)
     
     # app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
     db.init_app(app)
     migrate.init_app(app,db)
     mail.init_app(app)
