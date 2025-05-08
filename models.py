@@ -2,6 +2,7 @@ from app import db
 from sqlalchemy import Enum
 import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
 
 
 # Define Models for your tables
@@ -35,7 +36,7 @@ class admin_request(db.Model):
 
     # Define your columns here
     request_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    request_date = db.Column(db.Date, default=datetime.date.today)  # Default to today if not provided
+    request_date = db.Column(db.DateTime, default=datetime.utcnow)  # Default to today if not provided
     status = db.Column(Enum('Pending', 'Approved', 'Denied', name='status_enum'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)  # Foreign key referencing User model
 
