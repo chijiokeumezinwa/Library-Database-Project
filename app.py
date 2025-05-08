@@ -5,6 +5,9 @@ from flask_migrate import Migrate
 from dotenv import load_dotenv
 from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
+from datetime import datetime
+
+import pytz
 
 load_dotenv()
 
@@ -85,18 +88,19 @@ def create_app():
 
     @app.route("/login", methods = ["GET","POST"])
     def login():
-        from database import list_users, verify
+        from database import list_users, verify, user
 
         #handle post request
         if request.method == "POST":
             username_submitted = request.form.get("id").strip()
             password_submitted = request.form.get("pw").strip()
-
+            my_user = user.query.filter_by(username=username_submitted).first()
             # Debugging: Print username and password submitted
             print(f"Username Submitted: {username_submitted}")
             print(f"Password Submitted: {password_submitted}")
             if (username_submitted in list_users()) and verify(username_submitted, password_submitted):
                 session['current_user'] = username_submitted
+                session['user_id'] = my_user.user_id
                 print(f"Current session user: {session['current_user']}")  # Debugging
                 flash("Login successful!") 
                 return(redirect(url_for("home")))
@@ -240,6 +244,109 @@ def create_app():
             db.session.commit()
             flash("Admin request has been denied.")
         return redirect(url_for('admin'))
+
+    @app.route("/request_book/<int:book_id>", methods=["POST"])
+    def request_book(book_id):
+        from models import Book, Loan, user
+
+        current_user = user.query.filter_by(username=session['current_user']).first()
+        if not current_user:
+            flash("You need to be logged in to request a book.")
+            return redirect(url_for('login'))
+
+        # Check if the user has already borrowed this book
+        existing_loan = Loan.query.filter_by(user_id=current_user.user_id, book_id=book_id, return_date=None).first()
+        if existing_loan:
+            flash('You have already borrowed this book. You cannot borrow it again until it is returned.', 'danger')
+            return redirect(url_for('home'))
+        
+        # Check if the user has already borrowed 5 books
+        borrowed_books = Loan.query.filter_by(user_id=current_user.user_id, return_date=None).count()
+        if borrowed_books >= 5:
+            flash('You cannot borrow more than 5 books at a time.', 'danger')
+            return redirect(url_for('home'))
+        # Find the book
+        book = Book.query.get(book_id)
+        if not book:
+            flash("Book not found.")
+            return redirect(url_for('home'))
+
+        # Check if there are available copies
+        if book.copies_available > 0:
+            # Create a new loan
+            loan_date = datetime.utcnow().date()
+            due_date = loan_date.replace(month=loan_date.month + 1)  # Example: Loan due in 1 month
+            new_loan = Loan(user_id=current_user.user_id, book_id=book.book_id, loan_date=loan_date, due_date=due_date)
+            db.session.add(new_loan)
+            book.copies_available -= 1  # Decrease the number of available copies
+            db.session.commit()
+            flash(f"You have successfully loaned '{book.title}'.")
+        
+        else:
+            flash(f"The book '{book.title}' is currently unavailable. You have successfully reserved it.")
+
+
+        return redirect(url_for('home'))
+
+    # @app.route('/reserve/<int:book_id>', methods=['POST'])
+    # def reserve_book(book_id):
+    #     from models import Book, user, Reservation
+    #     if 'user_id' not in session:
+    #         flash('You must be logged in to reserve books.', 'warning')
+    #         return redirect(url_for('login'))
+
+    #     current_user_id = session['user_id']
+    #     user = user.query.get(current_user_id)
+
+    #     # Check if the user is an admin
+    #     if not user.is_admin:
+    #         flash('You do not have permission to reserve books. Admins only.', 'danger')
+    #         return redirect(url_for('home'))
+
+    #     # Retrieve the book to reserve
+    #     book = Book.query.get(book_id)
+    #     if not book:
+    #         flash('Book not found.', 'danger')
+    #         return redirect(url_for('home'))
+
+    #     if book.copies_available <= 0:
+    #         flash('Sorry, no copies of this book are available for reservation.', 'danger')
+    #         return redirect(url_for('home'))
+
+    #     # Check if the book is already reserved
+    #     existing_reservation = Reservation.query.filter_by(book_id=book_id, status='Pending').first()
+    #     if existing_reservation:
+    #         flash(f'This book has already been reserved by someone else.', 'danger')
+    #         return redirect(url_for('home'))
+
+    #     # Create a reservation for the book
+    #     reservation_date = datetime.today().date()
+
+    #     new_reservation = Reservation(user_id=user_id, book_id=book_id, reservation_date=reservation_date, status='Pending')
+    #     db.session.add(new_reservation)
+
+    #     # Decrement the available copy count of the book
+    #     book.copies_available -= 1
+
+    #     db.session.commit()
+
+    #     flash(f'You have successfully reserved "{book.title}".', 'success')
+    #     return redirect(url_for('home'))
+
+    @app.route("/view_reservations")
+    def view_reservations():
+        from models import Reservation, Book, user
+
+        current_user = user.query.filter_by(username=session['current_user']).first()
+        if not current_user:
+            flash("You need to be logged in to view your reservations.")
+            return redirect(url_for('login'))
+
+        # Fetch reserved books
+        reserved_books = Reservation.query.filter_by(user_id=current_user.user_id).all()
+
+        reserved_books_details = [Book.query.get(reservation.book_id) for reservation in reserved_books]
+        return render_template("view_reservations.html", reserved_books=reserved_books_details)
 
     @app.route('/profile')
     def profile():
