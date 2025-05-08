@@ -33,6 +33,24 @@
             </p>
         </div>
         <div class="container">
+            <h3>Books you have loaned:</h3>
+            <ul>
+                {% for book in loaned_books %}
+                    <li>{{ book.title }} by {{ book.author }} (ISBN: {{ book.isbn }})</li>
+                {% else %}
+                    <li>No books loaned yet.</li>
+                {% endfor %}
+            </ul>
+            <h3>Books you have reserved:</h3>
+            <ul>
+                {% for book in reserved_books %}
+                    <li>{{ book.title }} by {{ book.author }} (ISBN: {{ book.isbn }})</li>
+                {% else %}
+                    <li>No books reserved yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="container">
             <p class="text-center mt-4">
                 Want to be an admin? Click here <a href="{{ url_for('request_admin_request')}}">Admin Request</a>
             </p>

@@ -52,13 +52,18 @@ def create_app():
 
     @app.route('/')
     def home():
-        from models import user
+        from models import user, Book
         current_user = None
 
         if 'current_user' in session:
             current_user = user.query.filter_by(username=session['current_user']).first()
 
-        return render_template('index.html', current_user=current_user)
+        # Fetch all books in the library system
+        all_books = Book.query.all()
+
+        # Optionally filter books based on the number of copies available
+        available_books = [book for book in all_books if book.copies_available > 0]
+        return render_template('index.html', current_user=current_user, available_books=available_books)
 
     @app.route('/about')
     def about():
@@ -224,7 +229,7 @@ def create_app():
 
     @app.route('/profile')
     def profile():
-        from models import user
+        from models import user, Loan, Reservation, Book
         if 'current_user' not in session:
             flash("You need to be logged in to view your profile.")
             return redirect(url_for('login'))
@@ -235,8 +240,19 @@ def create_app():
         if not current_user:
             flash("User not found.")
             return redirect(url_for('login'))
+        # Get all books that the current user has loaned
+        loaned_books = Loan.query.filter_by(user_id=current_user.user_id).all()
         
-        return render_template('profile.html', username=current_user.username)
+        # Get all books that the current user has reserved
+        reserved_books = Reservation.query.filter_by(user_id=current_user.user_id, status='Pending').all()
+
+        # Get the book details for each loan and reservation
+        loaned_books_details = [Book.query.get(loan.book_id) for loan in loaned_books]
+        reserved_books_details = [Book.query.get(reservation.book_id) for reservation in reserved_books]
+
+        
+        return render_template('profile.html', username=current_user.username, loaned_books=loaned_books_details, 
+                               reserved_books=reserved_books_details)
 
     @app.route('/edit_profile', methods=['GET', 'POST'])
     def edit_profile():
