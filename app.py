@@ -3,27 +3,41 @@ from flask import Flask, render_template, session, url_for, redirect, request, a
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from dotenv import load_dotenv
+from flask_mail import Mail, Message
+from itsdangerous import URLSafeTimedSerializer
 
 load_dotenv()
 
 #credentials
-db_user = os.environ['DB_USER']
-db_password = os.environ['DB_PASSWORD']
-db_name = os.environ['DB_NAME']
 
 db = SQLAlchemy()
 migrate = Migrate()
+mail = Mail()
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object('config')
 
+     # Debugging: Check if environment variables are loaded correctly
+    print(f"DB_USER: {os.getenv('DB_USER')}")
+    print(f"DB_PASSWORD: {os.getenv('DB_PASSWORD')}")
+    print(f"DB_HOST: {os.getenv('DB_HOST')}")
+    print(f"DB_NAME: {os.getenv('DB_NAME')}")
+    db_user = os.getenv('DB_USER')
+    db_password = os.getenv('DB_PASSWORD')
+    db_host = os.getenv('DB_HOST')
+    db_name = os.getenv('DB_NAME')
 
-    app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqldb://{db_user}:{db_password}@localhost/{db_name}".format(
-        db_user=db_user, db_password=db_password, db_name=db_name)
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SECRET_KEY'] = os.urandom(24)
+
+    app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{db_user}:{db_password}@{db_host}/{db_name}"
+    # app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqldb://{db_user}:{db_password}@localhost/{db_name}".format(
+    #     db_user=db_user, db_password=db_password, db_name=db_name)
+    
+    # app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
     migrate.init_app(app,db)
+    mail.init_app(app)
 
     with app.app_context():
         db.create_all()
