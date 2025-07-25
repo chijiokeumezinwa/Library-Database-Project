@@ -40,6 +40,7 @@
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     {% if session.get("current_user", None) == None %}
+                            <li><a class="nav-link" href="{{ url_for('register') }}">Register</a></li>
                             <form action="/login" method="post" class="navbar-form navbar-right">
                                 <div class="form-group">
                                   <input type="text" name="id" placeholder="User Name" class="form-control">

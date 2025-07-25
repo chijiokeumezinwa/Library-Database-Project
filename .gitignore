@@ -3,12 +3,14 @@
 
 ## No virtual environment shared
 MyVenv/
+venv/
 
 ## No sharing of cache
 __pycache__
 
 
 #dont share migration
+migrations/
 migrations/__pycache__
 migrations/versions/__pycache__/
 
@@ -27,3 +29,5 @@ migrations/versions/__pycache__/
 # Ignore Python bytecode files
 __pycache__/
 *.py[cod]
+
+populate_db.py
