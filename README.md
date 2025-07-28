@@ -49,7 +49,7 @@ The goal of the project was to build a Flask application hosted on an AWS EC2 in
 
     ```bash
     mkdir ~/projects && cd ~/projects
-    git clone https://github.com/your-repo/Library-Database-Project.git # Replace with your actual repo URL
+    git clone https://github.com/chijiokeumezinwa/Library-Database-Project.git
     cd Library-Database-Project
     python3 -m venv venv
     source venv/bin/activate
